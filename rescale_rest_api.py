@@ -25,7 +25,6 @@ import sys
 import time
 import os
 import platform
-import os
 import tarfile
 
 # 1. Get platform information

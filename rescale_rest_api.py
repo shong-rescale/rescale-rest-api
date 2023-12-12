@@ -157,7 +157,7 @@ def job_setup (rescale_platform, my_token, job_name, command, code_name, version
                    #},
                     'useMPI' : False,
                     'flags' : {
-                        'igCv': True
+                   #    'igCv': True
                         },
                     'command' : job_command,
                     'analysis' : {

@@ -132,11 +132,11 @@ def upload_local_files(rescale_platform,my_token,input_file="rescale.tar.gz") :
     return inputfiles_list
 
 # 4. Job setup
-def job_setup (rescale_platform, my_token, job_name, command, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list):
+def job_setup (rescale_platform, my_token, job_name, command, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list):
     # remove input rescale.tar.gz and compress all output
     zip_command = 'rm rescale.tar.gz \ntar --exclude=rescale_rest_api.py --exclude=main.py --exclude=process_output.log --exclude=__pycache__ --exclude=tmp -czvf rescale.tar.gz ./* \n'
     # remove all files except ouput rescale.tar.gz
-    rm_command = 'find . ! -name "rescale.tar.gz" -type f -exec rm -f "{}" \; \nrm $HOME/work/process_output.log\n sleep 5'
+    rm_command = '\nfind . ! -name "rescale.tar.gz" -type f -exec rm -f "{}" \; \nrm $HOME/work/process_output.log\n sleep 5'
     
     job_command = command + zip_command + rm_command
 
@@ -153,12 +153,25 @@ def job_setup (rescale_platform, my_token, job_name, command, code_name, version
                     'envVars' : license_info,
                     'useRescaleLicense' : False, # For Rescale internal test please switch to True
                    #'onDemandLicenseSeller' : { 
-                   #    'code' : 'rescale-trial',
-                   #    'name' : 'Rescale Trial'
+                   #    'code' : 'rescale',
+                   #    'name' : 'Rescale'
                    #},
+                    'userDefinedLicenseSettings': {
+                        'featureSets': [
+                            {
+                                'name': 'USER_SPECIFIED_0',
+                                'features': [
+                                    {
+                                        'name': feature_name,
+                                        'count': feature_count
+                                    }
+                                ] if feature_name and feature_count else []
+                            }
+                        ]
+                    },
                     'useMPI' : False,
                     'flags' : {
-                   #    'igCv': True
+                   #    'igCv': True # For ignore precondition valication
                         },
                     'command' : job_command,
                     'analysis' : {

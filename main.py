@@ -15,6 +15,7 @@ Email: shong@rescale.com
 Date: Dec 04, 2023
 Versions:
 - v1 (20231204): Initial version-controlled implementation
+- v2 (20231214): Add explict license checkout
 '''
 
 import requests
@@ -27,6 +28,7 @@ import os
 import datetime
 import getpass
 import json
+import math
 
 import rescale_rest_api as rescale
 
@@ -39,6 +41,8 @@ if __name__ == "__main__":
 
      command1="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
      command2="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
+     command3="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
+     command4="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
      # End of User Define section
 
      # 0. Predefined section by admin
@@ -47,13 +51,19 @@ if __name__ == "__main__":
 
      job_name1 = current_user+'@'+batch_name1+'@'+now.strftime('%Y%m%d-%H%M%S')
      job_name2 = current_user+'@'+batch_name2+'@'+now.strftime('%Y%m%d-%H%M%S')
-    #job_name3 = current_user+'@'+batch_name3+'@'+now.strftime('%Y%m%d-%H%M%S')
-    #job_name4 = current_user+'@'+batch_name4+'@'+now.strftime('%Y%m%d-%H%M%S')
+     job_name3 = current_user+'@'+batch_name3+'@'+now.strftime('%Y%m%d-%H%M%S')
+     job_name4 = current_user+'@'+batch_name4+'@'+now.strftime('%Y%m%d-%H%M%S')
      code_name = 'abaqus'
      version_code = '2022-2241'
      license_info = { 'LM_LICENSE_FILE': '27003@mgmt0' }
      coretype_code='starlite_max' 
      core_per_slot= 1
+     feature_name='abaqus' # it is essential for explcit license checkout, if you do not want to please set as ''
+     def feature_count_cal(n): # calculate abaqus feature
+         result = 5 * n ** 0.422
+         result_rounded = math.ceil(result)
+         return int(result_rounded)
+     feature_count=feature_count_cal(core_per_slot) # it is essential for explcit license checkout, if you do not want to please set as ''
      slot = '1'
      walltime=2
      projectid= 'xDdRk' # KR solutions
@@ -65,6 +75,8 @@ if __name__ == "__main__":
      print(f"license_info = {license_info}")
      print(f"coretype_code = {coretype_code}")
      print(f"core_per_slot = {core_per_slot}")
+     print(f"feature_name = {feature_name}")
+     print(f"feature_count = {feature_count}")
      print(f"slot = {slot}")
      print(f"walltime = {walltime}")
      print(f"projectid = {projectid}")
@@ -74,7 +86,6 @@ if __name__ == "__main__":
      # Varialbes for Rescale Job submission
      rescale_platform=None # or 'https://kr.rescale.com'
      my_token=None # or 'Token '+'Rescale API key'
-     inputfiles_list = [] # Rescale input fiiles ID list, default: rescale.tar.gz
 
      # 1. Rescale platform and API token
      rescale_platform, my_token = rescale.platform_my_token(rescale_platform, my_token)
@@ -86,7 +97,7 @@ if __name__ == "__main__":
      inputfiles_list1 = rescale.upload_local_files(rescale_platform, my_token)
 
      # 4. Rescale Job Configuration
-     job_id1 = rescale.job_setup(rescale_platform, my_token, job_name1, command1, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list1)
+     job_id1 = rescale.job_setup(rescale_platform, my_token, job_name1, command1, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list1)
 
      # 5. Rescale Job Submit
      rescale.job_submit(rescale_platform, my_token, job_name1, job_id1)
@@ -98,7 +109,7 @@ if __name__ == "__main__":
      # 3.1 Get the ID of input file in Rescale files (AWS S3) from Previous Rescale Job
      inputfiles_list2 = rescale.file_previous_job(rescale_platform, my_token, job_id1)
      # 4.1 Rescale Job Configuration
-     job_id2 = rescale.job_setup(rescale_platform, my_token, job_name2, command2, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list2)
+     job_id2 = rescale.job_setup(rescale_platform, my_token, job_name2, command2, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list2)
      # 5.1 Rescale Job Submit
      rescale.job_submit(rescale_platform, my_token, job_name2, job_id2)
      # 6.1 Rescale Job Moinitor

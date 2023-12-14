@@ -43,9 +43,7 @@ if __name__ == "__main__":
      command2="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
      command3="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
      command4="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
-     # End of User Define section
 
-     # 0. Predefined section by admin
      now = datetime.datetime.now()
      current_user = getpass.getuser()
 
@@ -53,6 +51,9 @@ if __name__ == "__main__":
      job_name2 = current_user+'@'+batch_name2+'@'+now.strftime('%Y%m%d-%H%M%S')
      job_name3 = current_user+'@'+batch_name3+'@'+now.strftime('%Y%m%d-%H%M%S')
      job_name4 = current_user+'@'+batch_name4+'@'+now.strftime('%Y%m%d-%H%M%S')
+     # End of User Define section
+
+     # 0. Predefined section by admin
      code_name = 'abaqus'
      version_code = '2022-2241'
      license_info = { 'LM_LICENSE_FILE': '27003@mgmt0' }
@@ -102,7 +103,7 @@ if __name__ == "__main__":
      # 5. Rescale Job Submit
      rescale.job_submit(rescale_platform, my_token, job_name1, job_id1)
 
-     # 6. Rescale Job Moinitor
+     # 6. Rescale Job Monitor
      rescale.job_monitor(rescale_platform, my_token, job_id1)
 
      # iterate as you want from 3.1 to 6.1 for dependent job
@@ -112,7 +113,7 @@ if __name__ == "__main__":
      job_id2 = rescale.job_setup(rescale_platform, my_token, job_name2, command2, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list2)
      # 5.1 Rescale Job Submit
      rescale.job_submit(rescale_platform, my_token, job_name2, job_id2)
-     # 6.1 Rescale Job Moinitor
+     # 6.1 Rescale Job Monitor
      rescale.job_monitor(rescale_platform, my_token, job_id2)
 
      # 7. Rescale Job Download

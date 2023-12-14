@@ -59,12 +59,12 @@ if __name__ == "__main__":
      license_info = { 'LM_LICENSE_FILE': '27003@mgmt0' }
      coretype_code='starlite_max' 
      core_per_slot= 1
-     feature_name='abaqus' # it is essential for explcit license checkout, if you do not want to please set as ''
+     feature_name='abaqus' # it is essential for explicit license checkout, if you do not want to please set as ''
      def feature_count_cal(n): # calculate abaqus feature
          result = 5 * n ** 0.422
          result_rounded = math.ceil(result)
          return int(result_rounded)
-     feature_count=feature_count_cal(core_per_slot) # it is essential for explcit license checkout, if you do not want to please set as ''
+     feature_count=feature_count_cal(core_per_slot) # it is essential for explicit license checkout, if you do not want to please set as ''
      slot = '1'
      walltime=2
      projectid= 'xDdRk' # KR solutions

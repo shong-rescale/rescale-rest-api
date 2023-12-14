@@ -15,6 +15,7 @@ Email: shong@rescale.com
 Date: Dec 04, 2023
 Versions:
 - v1 (20231204): Initial version-controlled implementation
+- v2 (20231214): Add explict license checkout
 '''
 
 import requests

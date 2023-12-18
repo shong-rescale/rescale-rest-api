@@ -16,6 +16,7 @@ Date: Dec 04, 2023
 Versions:
 - v1 (20231204): Initial version-controlled implementation
 - v2 (20231214): Add explict license checkout
+- v3 (20231218): Add env command
 '''
 
 import requests
@@ -133,12 +134,18 @@ def upload_local_files(rescale_platform,my_token,input_file="rescale.tar.gz") :
 
 # 4. Job setup
 def job_setup (rescale_platform, my_token, job_name, command, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list):
+    # env command 
+    env_command = '''\
+            sed -i.tmp 's/^comile_fortran/#&/' $HOME/abaqus_v6.env\n
+            sed -i.tmp 's/^link_sl/#&/' $HOME/abaqus_v6.env\n
+            rm abaqus_v6.env.tmp\n
+            '''
     # remove input rescale.tar.gz and compress all output
     zip_command = 'rm rescale.tar.gz \ntar --exclude=rescale_rest_api.py --exclude=main.py --exclude=process_output.log --exclude=__pycache__ --exclude=tmp -czvf rescale.tar.gz ./* \n'
     # remove all files except ouput rescale.tar.gz
     rm_command = '\nfind . ! -name "rescale.tar.gz" -type f -exec rm -f "{}" \; \nrm $HOME/work/process_output.log\n sleep 5'
     
-    job_command = command + zip_command + rm_command
+    job_command = env_command + command + zip_command + rm_command
 
     # Rescale API for batch job configuration
     job_url = rescale_platform + '/api/v2/jobs/'

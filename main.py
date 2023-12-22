@@ -16,6 +16,7 @@ Date: Dec 04, 2023
 Versions:
 - v1 (20231204): Initial version-controlled implementation
 - v2 (20231214): Add explict license checkout
+- v3 (20231223): Add loop structure for dependent job
 '''
 
 import requests
@@ -32,25 +33,27 @@ import math
 
 import rescale_rest_api as rescale
 
+def generate_batch_and_job_names(commands):
+    # Split the commands_text into lines
+    commands_lines = [line.strip() for line in commands.strip().split('\n')]
+
+    # Create batch_names and job_names arrays based on the number of lines in commands
+    batch_names = [f'job{i + 1}' for i in range(len(commands_lines))]
+
+    current_user = getpass.getuser()
+    job_names = [f"{current_user}@{batch_name}@{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}" for batch_name in batch_names]
+
+    job_id = [None] * len(commands_lines)
+
+    return commands_lines, batch_names, job_names, job_id
+
 if __name__ == "__main__":
+
      # User Define section
-     batch_name1='job1'
-     batch_name2='job2'
-     batch_name3='job3'
-     batch_name4='job4'
-
-     command1="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
-     command2="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
-     command3="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
-     command4="abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive \n"
-
-     now = datetime.datetime.now()
-     current_user = getpass.getuser()
-
-     job_name1 = current_user+'@'+batch_name1+'@'+now.strftime('%Y%m%d-%H%M%S')
-     job_name2 = current_user+'@'+batch_name2+'@'+now.strftime('%Y%m%d-%H%M%S')
-     job_name3 = current_user+'@'+batch_name3+'@'+now.strftime('%Y%m%d-%H%M%S')
-     job_name4 = current_user+'@'+batch_name4+'@'+now.strftime('%Y%m%d-%H%M%S')
+     commands='''
+abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive
+abaqus job=s4b cpus=$RESCALE_CORES_PER_SLOT scratch=$PWD/tmp interactive
+'''
      # End of User Define section
 
      # 0. Predefined section by admin
@@ -69,8 +72,6 @@ if __name__ == "__main__":
      walltime=2
      projectid= 'xDdRk' # KR solutions
 
-     print(f"job_name1 = {job_name1}")
-     print(f"job_name2 = {job_name2}")
      print(f"code_name = {code_name}")
      print(f"version_code = {version_code}")
      print(f"license_info = {license_info}")
@@ -94,28 +95,40 @@ if __name__ == "__main__":
      # 2. Compress input files as rescale.tar.gz for designated path (Default path is current python execut
      rescale.create_tar_gz()
 
-     # 3. Upload input file to Rescale files (AWS S3). Get the ID of input file in Rescale files
-     inputfiles_list1 = rescale.upload_local_files(rescale_platform, my_token)
+     # Generate_batch_and_job_names
+     commands_lines, batch_names, job_names, job_id = generate_batch_and_job_names(commands) 
 
-     # 4. Rescale Job Configuration
-     job_id1 = rescale.job_setup(rescale_platform, my_token, job_name1, command1, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list1)
+     # Iterate through jobs
+     for i, (batch_name, command, job_name) in enumerate(zip(batch_names, commands_lines, job_names)):
 
-     # 5. Rescale Job Submit
-     rescale.job_submit(rescale_platform, my_token, job_name1, job_id1)
+         now = datetime.datetime.now()  # Declare now for each job
 
-     # 6. Rescale Job Monitor
-     rescale.job_monitor(rescale_platform, my_token, job_id1)
+         if i == 0:
+             # 3. Upload input file to Rescale files (AWS S3) only for the first job
+             inputfiles_list = rescale.upload_local_files(rescale_platform, my_token)
 
-     # iterate as you want from 3.1 to 6.1 for dependent job
-     # 3.1 Get the ID of input file in Rescale files (AWS S3) from Previous Rescale Job
-     inputfiles_list2 = rescale.file_previous_job(rescale_platform, my_token, job_id1)
-     # 4.1 Rescale Job Configuration
-     job_id2 = rescale.job_setup(rescale_platform, my_token, job_name2, command2, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list2)
-     # 5.1 Rescale Job Submit
-     rescale.job_submit(rescale_platform, my_token, job_name2, job_id2)
-     # 6.1 Rescale Job Monitor
-     rescale.job_monitor(rescale_platform, my_token, job_id2)
+             # 4. Rescale Job Configuration
+             job_id[i] = rescale.job_setup(rescale_platform, my_token, job_name, command, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list)
 
-     # 7. Rescale Job Download
-     rescale.job_download(rescale_platform, my_token, job_name2, job_id2)
+             # 5. Rescale Job Submit
+             rescale.job_submit(rescale_platform, my_token, job_name, job_id[i])
 
+             # 6. Rescale Job Monitor
+             rescale.job_monitor(rescale_platform, my_token, job_id[i])
+
+         if i > 0:
+             # 3.1 Get the ID of the input file in Rescale files (AWS S3) from the previous Rescale Job
+             inputfiles_list = rescale.file_previous_job(rescale_platform, my_token, job_id[i-1])
+
+             # 4.1 Rescale Job Configuration
+             job_id[i] = rescale.job_setup(rescale_platform, my_token, job_name, command, feature_name, feature_count, code_name, version_code, license_info, coretype_code, core_per_slot, slot, walltime, projectid, inputfiles_list)
+
+             # 5.1 Rescale Job Submit
+             rescale.job_submit(rescale_platform, my_token, job_name, job_id[i])
+
+             # 6.1 Rescale Job Monitor
+             rescale.job_monitor(rescale_platform, my_token, job_id[i])
+
+             if i == len(batch_names) - 1:
+                 # 7. Rescale Job Download
+                 rescale.job_download(rescale_platform, my_token, job_name, job_id[i])
